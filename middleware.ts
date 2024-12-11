@@ -22,7 +22,23 @@ export async function middleware(request: NextRequest) {
   const identifier = ip;
   console.log("Request received from IP:", ip);
 
-  const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
+  let success, limit, remaining, reset;
+  try {
+    const result = await ratelimit.limit(identifier);
+    success = result.success;
+    limit = result.limit;
+    remaining = result.remaining;
+    reset = result.reset;
+
+    console.log("Remaining requests for IP:", identifier, "Remaining:", remaining);
+  } catch (error) {
+    console.error("Error during rate limit check:", error);
+    return NextResponse.json({
+      message: 'Internal Server Error',
+    }, {
+      status: 500,
+    });
+  }
 
   console.log("Rate limit check for IP:", ip, "Success:", success, "Remaining:", remaining, "Reset:", reset);
 
